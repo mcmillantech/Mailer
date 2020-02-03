@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MTMail Edit email</title>
+	<meta charset="utf-8">
+<script src="MailEdit.js"></script>
+<script src="../../ckeditor/ckeditor.js"></script>
+<link rel="stylesheet" type="text/css" href="MailEdit.css">
+<style>
+</style>
+
+<script>
+// ---------------------------------------
+//	Handler for radio buttons
+//
+// ---------------------------------------
+function bmRadio(which)
+{
+	switch (which)
+	{
+	case 1:
+		var el = document.getElementById('bmtoone');
+		el.style.visibility = 'hidden';
+		el = document.getElementById('bmtolist');
+		el.style.visibility = 'visible';
+		break;
+	case 2:
+		var el = document.getElementById('bmtolist');
+		el.style.visibility = 'hidden';
+		el = document.getElementById('bmtoone');
+		el.style.visibility = 'visible';
+		break;
+	}
+}
+
+function bmSend()
+{
+	var el = document.getElementById('mcFrom');
+	if (el.value.length < 2)
+	{
+		alert ("You must include a sender address");
+		return;
+	}
+	el = document.getElementById('subject');
+	if (el.value.length < 2)
+	{
+		if (!confirm("Do you want to send without a subject?"))
+			return;
+	}
+	
+	document.getElementById("bmForm").submit();
+}
+
+function home()
+{
+	document.location.assign('Home.php');
+}
+
+function bmSave()
+{
+	alert('Save');
+}
+</script>
+
+</head>
+
+<body onLoad='doLoad()'>
+<h1>Mailer: Edit Email</h1>
+<button onClick='home()'>Home</button>
+
+<div id='container'>
+	<div class='basicmailform'>
+	<form id='bmForm' action='MessagePost.php?src=editor&id={id}' method='post' enctype='multipart/form-data'>
+
+		<span class='prompt1'>Message name</span>
+		<span class='input1'>
+		<input type='text' id='mcName' name='mcName' size='45' value='{name}'></span>
+		<br>&nbsp;&nbsp;(For your reference)<br>
+	
+		<span class='prompt1'>Sender email address</span>
+		<span class='input1'>
+		<input type='text' id='mcFrom' name='mcFrom' size='45' value='{sender}'></span>
+		<br><br>
+	
+		<span class='prompt1'>Subject</span>
+		<span class='input1'>
+		<input type='text' id='subject' name='mcSubject' size='45' value='{subject}'></span>
+		<br><br>
+						<!-- End of header -->
+	
+		<textarea name='html' id='editTA' rows='25' cols='60'>{htmltext}</textarea>
+		<script>
+		  CKEDITOR.replace( 'html' );
+		</script>
+
+		<div style="height:50px">&nbsp;</div>
+		<br><br>
+		<br>
+		<div id='buttons' class='buttonpanel'>
+			<br>&nbsp;
+			<input type='button' onClick='bmAttach()' value='Attach...'>
+			&nbsp;&nbsp;
+			<input type='file' name='mcAttFile[]' id='mcAttFile' multiple 
+				style='visibility:hidden' onChange='fileUpload()'>
+			<span class='filespanel' id='showAtts'>{attachment}</span>
+			<br><br>&nbsp;
+			<input type='hidden' name='mcAttach' id='mcAttach' value='{attachment}'>
+			<input type='submit' name='btnSend' value='Send'>
+			&nbsp;&nbsp;
+			<input type='submit' name='btnSave' value='Save' >
+			<br>&nbsp;
+		</div>
+	</form></div>
+
+
+	<div id='listpreview'>		<!-- This holds the (hidden) preview pane -->
+	<button type='button' onClick='closePreview()'>Close</button> 
+	</div>
+	<br>
+</div>
+
+</body>
+</html>

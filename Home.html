@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Email Messages</title>
+<meta charset="utf-8">
+<style>
+	.whatpanel
+	{
+		position:	absolute;
+		width:		350px;
+		background-color:	white;
+		left:		200px;
+		min-height:	30px;
+		border:		1px solid;
+		padding-top:	5px;
+	}
+	.whattext
+	{
+		font-family: arial, sans-serif;
+		font-size: 120%;
+		text-align: center;
+	}
+	.helppanel
+	{
+		position:		absolute;
+		width:			150px;
+		background-color:	white;
+		left:			600px;
+		border:			1px solid;
+		padding-top:	5px;
+		visibility:		hidden;
+	}
+	button
+	{
+		margin-left:	10px;
+		margin-top:		10px;
+		margin-bottom:	10px;
+		font-size:		16px;
+	}
+</style>
+
+<script>
+// -----------------------------------------
+//	Handlers for the menu
+//
+// -----------------------------------------
+function doBasic()
+{
+//	window.location.assign("BasicSent.php");
+	window.location.assign("MessageList.php?type=basic");
+}
+
+function doNewsletter()
+{
+	window.location.assign("MessageList.php?type=newsletter");
+}
+/*
+function doCompose()
+{
+	window.location.assign("Newsletters.php");
+}
+*/
+function doLists()
+{
+	window.location.assign("MailLists.php");
+}
+
+function logOut()
+{
+	window.location.assign("LogOut.php");
+}
+
+function templates()
+{
+	window.location.assign("Templates.php");
+}
+
+function viewSend()
+{
+	window.location.assign("ViewLog.php");
+}
+
+function none()
+{
+	alert('Not available');
+}
+
+function about()
+{
+	var el = document.getElementById("helppanel");
+	el.style.visibility = 'visible';
+}
+
+</script>
+
+</head>
+
+<body style='background-color: #eeeeee;'>
+<h1 style='margin-left:250px'>Mailer: Messages</h1>
+<div style='position:absolute' id='container'>
+	<div class='whatpanel' style='top:50px'>
+		<div class='whattext'>What do you want to do?</div>
+	</div>
+	<br><br>
+	<div class='whatpanel' style='top:130px'>
+		{items}
+			<button onClick='{call}' {mode}>{text}</button><br>
+		{/items}
+		<br>
+		<button onClick='about()'>About</button>
+		<br>
+		<button onClick='logOut()'>Log out</button>
+	</div>
+	
+	<div class='helppanel' id='helppanel' style='top:130px'>
+	<p>MT Mailer</p>
+	<p>McMillan Technology</p>
+	<p>Version 2.3.0</p>
+	</div>
+</div>
+
+</body>
+</html>
