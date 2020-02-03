@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<head>
+	<title>MT Mail Messages</title>
+	<meta charset="utf-8">
+	<script src="../../ckeditor/ckeditor.js"></script>
+	<script src="MailEdit.js"></script>
+	<link rel="stylesheet" type="text/css" href="MailEdit.css">
+	<link rel="stylesheet" type="text/css" href="../../includes/Menus.css">
+<script>
+
+// -------------------------------------
+//	Clear the change flag on page load
+// -------------------------------------
+function doLoad()
+{
+	changed = false;
+}
+
+// -------------------------------------
+//	Handler for 'Back to list'
+// -------------------------------------
+function mslist()
+{
+	if (changed)
+	{
+		if (confirm ("Leave without saving?"))
+			document.location.assign("BasicSent.php");
+	}
+	else
+		document.location.assign("BasicSent.php");
+}
+
+// -------------------------------------
+//	Handler for 'Home'
+// -------------------------------------
+function goHome()
+{
+	if (changed)
+	{
+		if (confirm ("Leave without saving?"))
+			document.location.assign('Home.php');
+	}
+	else
+		document.location.assign('Home.php');
+}
+
+/*
+function msmSend(id)
+{
+	if (changed)
+	{
+		if (!confirm ("Send without saving?"))
+			return;
+	}
+
+	var str = "SendNews.php?action=msg&id=" + id;
+	document.location.href = str;
+}
+*/
+
+// -------------------------------------
+//	Handler for Attach button
+//
+//	Show the file select element
+// -------------------------------------
+function bmAttach()
+{
+	var el = document.getElementById("showAtts");
+	el.style.visibility = 'hidden';
+	el = document.getElementById('mcAttFile');
+	el.style.visibility = 'visible';
+	changed = true;
+}
+
+</script>
+</head>
+
+<body style='background-color: #eeeeee;' onLoad='doLoad()'>
+<br>
+
+	<h1>Mailer: Editing message</h1>
+	<p><button type='button' onClick='goHome()'>Home</button>
+	&nbsp;&nbsp;
+	<button type='button' onClick='mslist()'>List</button></p>
+
+	<h3>Editing message {msgname}</h3>
+	<div class='container'>
+
+	<div class='mainEditForm'>
+	<form action='SendNews.php?id={id}' onSubmit='editSubmit()' method='post' 
+		enctype='multipart/form-data'>
+		<div class='headerpanel'><br>
+			<span class='prompt1'>Message name</span>
+			<span class='inputhd'><input type='text' id='mcName' name='mcName' size='45' value='{name}'></span>
+			<br>&nbsp;&nbsp;(For your reference)<br>
+			<span class='prompt1'>Subject</span>
+			<span class='inputhd'><input type='text' id='mcSubject' name='mcSubject' size='45' value='{subject}'></span>
+			<br><br>
+			<span class='prompt1'>Sender address</span>
+			<span class='inputhd'><input type='text' name='mcFrom' size='45' value='{sender}'></span>
+			<br><br>
+		</div>
+		<br>
+	
+		<div class='maineditpanel' id='maineditpanel' name='maineditpanel'>
+			{htmltext}
+		</div>  <!-- maineditpanel -->
+	<!-- This is the end of the content in main panel -->
+		<br>
+		<div class='editorpanel' id='editview'>
+			<div style='text-align: right' onClick='closeEditor()'>X&nbsp;&nbsp; </div>
+			<textarea name='ed' id='editTA' rows='15' cols='60'>aaa</textarea>
+		    {ckreplace}
+			<input type='button' onClick='editPost()' value='Done'>
+		</div>
+		<div>
+			<input type='hidden' id='html' name='html' value='testhtm'>
+		</div>
+	
+		<div id='buttons' class='buttonpanel'>
+			<br>&nbsp;
+			<input type='button' onClick='bmAttach()' value='Attach...'>
+			&nbsp;&nbsp;
+				<input type='file' name='mcAttFile[]' id='mcAttFile' multiple style='visibility:hidden' onChange='fileUpload()'>
+				<span class='filespanel'>
+				<input type='text'  id='showAtts' name='mcAttach' value='{attachment}' readonly></span>
+				<br><br>&nbsp;
+				<input type='submit' name='btnSend' value='Send'>
+				&nbsp;&nbsp;
+				<input type='submit' name='btnSave' value='Save' >
+				<br>&nbsp;
+		</div>
+	</form>
+	</div>
+
+
+	<button onClick='traceHtml()'>Trace</button>
+</div>
+</body>
+</html>

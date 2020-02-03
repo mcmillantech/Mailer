@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<head>
+	<title>Post message</title>
+	<meta charset="utf-8">
+	<script src="../../ckeditor/ckeditor.js"></script>
+	<script src="MailEdit.js"></script>
+	<link rel="stylesheet" type="text/css" href="MailEdit.css">
+	<link rel="stylesheet" type="text/css" href="../../includes/Menus.css">
+</head>
+
+<body>
+<h1>Mailer: Post message {msgname}</h1>
+<button type='button' onClick='goHome()'>Home</button>
+
+<div id='container'>
+	<div class='basicmailform'>
+	<form id='bmForm' action='MessageSend.php?src=editor&id={msgId}' method='post' 
+		enctype='multipart/form-data'>
+		<span class='prompt1'>Sender email address</span>
+		<span class='input1'>
+		<input type='text' id='mcFrom' name='sender' size='45' value='{from}'></span>
+		<br><br>
+
+		<span class='prompt1'>Recipients</span>
+		<span class='input1' id=bmtoone style='visibility:hidden'>
+		<input type='text' id='bmToOne' name='bmOne' size='40'></span>
+		<span class='input1' id=bmtolist name='bmList'>
+		<select id='bmToList' name='rlist' style='width:100px' onChange='previewList()'>
+		{rList}
+			<option value='{id}'>{name}</option>
+		{/rList}
+		<option value='13'>Networkers</option>
+		</select>&nbsp;&nbsp;
+		<button type='button' onClick='previewList()'>Preview</button>
+		</span>
+		<span style='position: absolute; left:500px'>
+		<input type='radio' name='bmto' value='List'  checked onChange='bmRadio(1)'>
+			Send to a list 
+		<input type='radio' name='bmto' value='Single' onChange='bmRadio(2)'>
+			Send to one</span>
+		<br><br>
+		<span class='prompt1'>Subject</span>
+		<span class='input1'>
+		<input type='text' id='subject' name='subject' size='45' value='{subject}'></span><br><br>
+		
+		<button type='button' onClick='bmSend()' name='btnSend'>Send</button>
+		<span class='prompt1'>Attachments</span>
+		<span class='input1'>
+		<input type='text' name='attachStr' size = '45' value='{attachStr}' readonly>
+		</span>
+	</form>
+	</div>
+
+	<div id='listpreview'>
+	<button type='button' onClick='closePreview()'>Close</button>
+	</div><br>
+	</div>
+
+<script>
+// ---------------------------------------
+//	Handler for radio buttons
+//
+// ---------------------------------------
+function bmRadio(which)
+{
+	switch (which)
+	{
+	case 1:
+		var el = document.getElementById('bmtoone');
+		el.style.visibility = 'hidden';
+		el = document.getElementById('bmtolist');
+		el.style.visibility = 'visible';
+		break;
+	case 2:
+		var el = document.getElementById('bmtolist');
+		el.style.visibility = 'hidden';
+		el = document.getElementById('bmtoone');
+		el.style.visibility = 'visible';
+		break;
+	}
+}
+
+function bmSend()
+{
+	var el = document.getElementById('mcFrom');
+	if (el.value.length < 2)
+	{
+		alert ("You must include a sender address");
+		return;
+	}
+	el = document.getElementById('subject');
+	if (el.value.length < 2)
+	{
+		if (!confirm("Do you want to send without a subject?"))
+			return;
+	}
+	
+	document.getElementById("bmForm").submit();
+}
+
+
+function goHome()
+{
+	document.location.assign('Home.php');
+}
+
+</script>
+</body>
+</html>

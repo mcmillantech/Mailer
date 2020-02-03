@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Create new message</title>
+<meta charset="utf-8">
+<script src="MailEdit.js"></script>
+<link rel="stylesheet" type="text/css" href="MailEdit.css">
+<link rel="stylesheet" type="text/css" href="../../includes/Menus.css">
+
+<script>
+
+// ----------------------------------------
+//	Handler for done button 
+//
+// ----------------------------------------
+function mcDone()
+{
+	var el = document.getElementById('mcName');		// Fetch the fields
+	var nam = encodeURI(el.value);
+	el = document.getElementById('mcSubject');
+	var subject = encodeURI(el.value);
+	el = document.getElementById('mcFrom');
+	var from = encodeURI(el.value);
+
+	if (nam == '' || subject == '' || from == '')	// Check all data is present
+	{
+		alert('All fields must be filled in');
+		return;
+	}
+	
+//	var str = "MailCreate.php?type=basic&action=new"		// ... and pass to MailCreate
+	var str = "MessageEdit.php?type=basic&action=new"		// ... and pass to MailCreate
+		+ "&msgname=" + nam
+		+ "&subject=" + subject
+		+ "&from=" + from;
+	document.location.href = str;
+}
+
+</script>
+</head>
+
+<body style='background-color: #eeeeee;'>
+<h1>Mailer: Create Message</h1>
+
+<p><button type='button' onClick='home()'>Home</button>
+&nbsp;&nbsp;
+
+<div id='container'>
+
+	<div class='mcform' style='top:130px; left:200px; padding-left:5px'>
+		<form>
+			<span class='prompt1'>Message name</span>
+			<span class='input1'><input type='text' id='mcName' size='45'></span>
+			<br>&nbsp;&nbsp;(For your reference)<br>
+			<span class='prompt1'>Subject</span>
+			<span class='input1'><input type='text' id='mcSubject' size='45'></span>
+			<br><br>
+			<span class='prompt1'>Sender address</span>
+			<span class='input1'><input type='text' id='mcFrom' size='45'></span>
+			<br><br>
+		</form>
+	</div>
+<!--
+	<div class='selector' style='top:300px; left:200px; padding-left:5px'>
+	Select template<br><br>
+	{lines}
+		<span id='tpsel{id}' onClick='mcPickTemplate("{id}")'>{name}</span>
+		<br>
+	{/lines}
+	</div>
+-->
+	<br>
+	<div style='position:absolute; top:250px; left:200px;'>
+		<button onClick='mcDone()'>Done</button>
+	</div>
+
+</div>
+</body>
+</html>

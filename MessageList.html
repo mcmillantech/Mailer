@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Email Messages</title>
+	<meta charset="utf-8">
+	<script src="MailEdit.js"></script>
+	<link rel="stylesheet" type="text/css" href="MailEdit.css">
+
+</head>
+
+<body>
+<h1>Mailer: {type}</h1>
+
+<p><button onClick='newMessage("{type}")'>Create message</button></p>
+<p><button type='button' onClick='home()'>Home</button></p>
+
+<div class='container'>
+	<div id='messagecreate'>
+		<div style="text-align: right" onClick='closeNewMailForm()'>X&nbsp;</div>
+		<form action='MailEdit.php?action=new' method='post'>
+		<b>Message Details</b>
+		<br><br>
+		Message name <input type='text' name='msgname'>
+		<br><br>
+		Subject <input type='text' name='subject'>
+		<br><br>
+		From <input type='text' name='from'>
+		<br><br>
+		** Pick up a template **
+		<br><br>
+		<input type='submit' value='Next'>
+		</form>
+	</div>
+	
+	<div id='messagelist'>
+		<h3>Messages</h3>
+		<b>Id
+		<span class='mslname'>Name</span>
+		<span class='mslsubject'>Subject</span>
+		<span class='msllast'>Last sent</span>
+		<span class='mslnsent'>Number sent</span>
+		</b><br><br>
+
+		{list}
+			<div class='mslmessage'>
+				{id}
+				<span class='mslname'>{name}</span>
+				<span class='mslsubject'>{subject}</span>
+				<br>
+				<span class='mslname'>Created {created}</span>
+				<span class='mslsubject'>{modified}</span>
+				<span class='msllast'>{lastsend}</span>
+				<span class='mslnsent'>{numbersent}</span>
+									<!-- The manage button -->
+				<div class='mslmanage'>
+					<div class='mslmanagebtn' onClick='mslManage(this, {id})'>
+						&nbsp;Manage&nbsp;</div>
+				</div>
+			</div>
+			&nbsp;<br><br><br><hr>
+		{/list}
+	</div>
+	
+	<br><div class='mslmanagedd' id='mslmanagedd'>
+		<div onClick='mslSend("{type}")'>Send</div>
+		<div onClick='mslEdit("{type}")'>Edit</div>
+		<div onClick='mslDelete()'>Delete</div>
+	</div>
+
+</div>
+
+<script>
+function newMail()
+{
+	
+	document.location.href = "MailCreate.php?mode=basic";
+}
+
+// ----------------------------------------
+//	Handler for Message 'edit' click
+//
+//	Called from Messages Manage list
+// ----------------------------------------
+function mslEdit(type)
+{
+	id = mslId;
+	var str = "MessageEdit.php?type=" + type + "&action=edit&id=" + id;
+	document.location.href = str;
+}
+
+// ----------------------------------------
+//	Handler for Messages 'Send' click
+// ----------------------------------------
+function mslSend(type)
+{
+	id = mslId;
+//	var str = "SendNews.php?type=" + type + "&action=msg&id=" + id;
+	var str = "MessagePost.php?src=list&id=" + id;
+	document.location.href = str;
+}
+
+function mslDelete(id)
+{
+	id = mslId;
+	if (confirm("Are you sure?"))
+	{
+		var str = "MessageEdit.php?action=delete&id=" + id;
+		document.location.href = str;
+	}
+}
+
+// ----------------------------------------
+//	Handler for "Manage" button
+//
+//	Show the drop down list
+//
+//	Paramerers	Calling button
+//				id of message
+//	Its hierarchy is container > message list
+//	> mslmessage.
+// ----------------------------------------
+function mslManage(obj, id)
+{
+	mslId = id;
+							// Position the menu relative to the mslmessage
+							// Locate the top of the calling button
+	var o2 = obj.parentElement;			// The msl message class )
+	var top = o2.parentElement.offsetTop +30;
+	top += 'px';
+
+	var dd = 'mslmanagedd';
+	var el = document.getElementById(dd);
+	el.style.top = top;
+
+	var v = el.style.visibility;
+	if (v == 'visible')
+		el.style.visibility = 'hidden';
+	else
+		el.style.visibility = 'visible';
+}
+
+</script>
+
+</body>
+</html>
