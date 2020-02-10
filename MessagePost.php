@@ -17,9 +17,11 @@ function showList()
 function showRecord($record)
 function attachments()
 */
+ini_set("display_errors", "1");
+error_reporting(E_ALL);
 	require_once "view.php";
 	include "LogCheck.php";
-
+echo "In post ";
 	$source = $_GET['src'];
 	$dta = array();
 
@@ -62,9 +64,10 @@ function doFromEditor()
 // ----------------------------------------------
 function buttons()
 {
-	$headers = getallheaders();				// Find the type of message from the referrer
-	$caller = $headers['Referer'];
-	$str = strstr($caller, "type=");
+//	$headers = getallheaders();	// Find the type of message from the referrer
+//	$caller = $headers['Referer'];
+	$caller = $_SERVER['HTTP_REFERER'];
+    	$str = strstr($caller, "type=");
 	$type = substr($str, 5, 5);
 
 	if ($type != "email")
@@ -147,6 +150,7 @@ function saveMessage($attachStr)
 	$subject = $_POST['mcSubject'];
 	$sender = $_POST['mcFrom'];
 	$html = addslashes($_POST['html']);
+//	$html = $_POST['html'];
 	
 	$sql = "UPDATE mailmessages SET htmltext=\"$html\", modified='$dtSQL', "
 		. "name='$name', subject='$subject', sender='$sender', attachment='$attachStr' "
