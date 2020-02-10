@@ -15,7 +15,9 @@ function sendMails($queue)
 function makeListSQL($dta, $row)
 function endOfRun($queue, $stats)
 */
-
+echo "This is CRON ";
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 	$dbConnection = openConnection();
 
 	include "MTMail.php";			// Mailer class
@@ -25,7 +27,6 @@ function endOfRun($queue, $stats)
 	$result = mysqli_query($dbConnection, $sql);
 	if (mysqli_num_rows($result) == 0)					// Nothing in the queue
 		exit;
-
 	$queue = mysqli_fetch_array($result);
 	$mtMail = makeMTMailObject($dbConnection, $queue);
 
@@ -42,6 +43,7 @@ function endOfRun($queue, $stats)
 // ----------------------------------------
 function openConnection()
 {
+//    echo "Path " . getcwd() . "\naaa ";
 	$hfile = fopen('config.txt', 'r');
 	if (!$hfile)
 		die ("Could not open config file");
@@ -55,12 +57,15 @@ function openConnection()
 	}
 	fclose ($hfile);
 
-	$dbConnection = mysqli_connect ('localhost', $config['dbuser'], $config['dbpw'])
+    $dbConnection = mysqli_connect 
+        ($config['dbhost'], $config['dbuser'], $config['dbpw'], $config['dbname'])
+        or die("Could not connect : " . $mysqli -> error);
+/*	$dbConnection = mysqli_connect ('localhost', $config['dbuser'], $config['dbpw'])
 		or die("Could not connect : " . mysqli_connect_error());
 
 	mysqli_select_db($dbConnection, $config['dbname']) 
 		or die("Could not select database : " . mysqli_error($dbConnection));
-
+*/
 	return $dbConnection;
 }
 
