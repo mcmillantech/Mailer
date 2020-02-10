@@ -1,4 +1,6 @@
 <?php
+ini_set("display_errors", "1");
+error_reporting(E_ALL);
 // -------------------------------------------------------------
 //  Project	Emailer
 //	File	MailEdit.php
@@ -19,10 +21,9 @@ function ckeditPanel()
 function showInstructPanel()
 */
 ?>
-
 <?php
-	require_once "view.php";
 	require_once "LogCheck.php";
+	require_once "view.php";
 	
 	$dta = array();
 	if (!array_key_exists('type', $_GET))
@@ -182,9 +183,9 @@ function ckeditPanel()
 		$formats = fread($hfile, filesize("formats.txt"));
 		fclose($hfile);
 	}
-						// Tbis html connects a <textarea> called ed to CKEditor 
-						// In doing so, moves the formats into the edit
-						// $formats is a parameter for the view, as is $ckreplace
+                        // Tbis html connects a <textarea> called ed to CKEditor 
+                        // In doing so, moves the formats into the edit
+                        // $formats is a parameter for the view, as is $ckreplace
 	$ckreplace = "<script>\n"
 		. " CKEDITOR.replace( 'ed', { $formats } ) \n"
 		. "</script>\n";
