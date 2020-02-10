@@ -17,11 +17,9 @@
 	$config = setConfig();
 	$user = $config['dbpw'];
 
-	$dbConnection = mysqli_connect ('localhost', $config['dbuser'], $config['dbpw'])
-		or die("Could not connect : " . mysqli_connect_error());
-
-	mysqli_select_db($dbConnection, $config['dbname']) 
-		or die("Could not select database : " . mysqli_error($dbConnection));
+    $dbConnection = mysqli_connect 
+        ($config['dbhost'], $config['dbuser'], $config['dbpw'], $config['dbname'])
+        or die("Could not connect : " . $mysqli -> error);
 
 	$sql = "SELECT * FROM mailusers WHERE name='$name'";
 	$result = mysqli_query($dbConnection, $sql)
@@ -38,11 +36,11 @@ function checkPassword($result)
 	$user = mysqli_fetch_array($result);
 	if ($user['password'] == $pw)
 	{
-		logOn();
-		$_SESSION['userLevel'] = $user['level'];
+            logOn();
+            $_SESSION['userLevel'] = $user['level'];
 	}
 	else
-		echo "Error: wrong password";
+            echo "Error: wrong password";
 }
 
 function logOn()
