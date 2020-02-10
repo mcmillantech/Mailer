@@ -54,12 +54,22 @@ private function makeHeaders($dbConnection)
 private function writeSentMessage()
 private function lookUpMessageName()
 */
+echo "MTMail \n";
+/*echo getcwd() . "\n";
+//print_r($_SERVER);
 
-if ($_SERVER['SERVER_NAME'] != 'localhost')
+$scriptPath = $_SERVER['SCRIPT_NAME'];
+echo $scriptPath ;
+$path = str_replace("CronMail.php", "", $scriptPath);
+echo $path;
+*/
+define ("LOCAL", 0);
+//if ($_SERVER['SERVER_NAME'] != 'localhost')
+if (LOCAL == 0)
 {
-	require_once "PEAR.php";
-	require_once "Mail.php";
-	require_once "Mail/mime.php";
+	require_once "/usr/share/pear/PEAR.php";
+	require_once "/usr/bin/php56/Mail.php";
+	require_once "/usr/bin/php56/Mail/mime.php";
 }
 
 
@@ -159,11 +169,10 @@ class MTMail
 //
 //	The list (table) holds the names of the columns in 
 //	the data table (e.g. contacts, rcp.. to be merged
-//	Map the merge records to these colimns
+//	Map the merge records to these columns
 // ----------------------------------------------------
 	public function setMap($recipient)
 	{
-
 		$em = $this->list['email'];
 		$fname = $this->list['forename'];
 		$sname = $this->list['surname'];
@@ -285,9 +294,11 @@ class MTMail
             $this->headers['To'] = $to;
             $this->headers['From'] = $this->sender;
 
-            if ($_SERVER['SERVER_NAME'] != 'localhost')	{	// Release mode
+//            if ($_SERVER['SERVER_NAME'] != 'localhost')	{	// Release mode
+            if (LOCAL == 0) {
+//                echo "Not local";
                 $crlf = "\n";
-                $mime = new Mail_mime($crlf);
+                $mime = new Mail_Mime($crlf);
                 $mime->setHTMLBody($this->mergedHtml);
                 $mime->setTXTBody($this->mergedPlain);
                 if ($this->attFile != '') {
@@ -296,12 +307,14 @@ class MTMail
                 $body = $mime->get();
                 $headers = $mime->headers($this->headers);
 //	print_r($headers);
-                $mail =& Mail::factory('sendmail', $this->params);
+//                $mail =& Mail::factory('sendmail', $this->params);
+                $mail =& Mail::factory('mail');
                 $result = $mail->send($to, $headers, $body);
-                echo "MTMail sendQueued dump<br>";
+                echo "MTMail sendQueued <br>";
             }
-            else {					// Development mode - running on local PC
+            else {			// Development mode - running on local PC
                 echo "\n<br>$to<br>";
+        echo "Local\n";
                 if ($this->attFile != '') {
                         $this->addAttachments('', true);
                 }
@@ -404,31 +417,31 @@ class MTMail
 //
 //	Returns the merged HTML
 // --------------------------------------------
-	private function merge($htxt, $recipient)
-	{
-		$ptr = strpos($htxt, '{', 0);				// Start of 1st placeholder
-		if (!$ptr)									// There aren't any - use the raw text
-			return $htxt;
+    private function merge($htxt, $recipient)
+    {
+        $ptr = strpos($htxt, '{', 0);		// Start of 1st placeholder
+        if (!$ptr)									// There aren't any - use the raw text
+            return $htxt;
 
-		$result = substr($htxt, 0, $ptr);			// Text before 1st ph
+        $result = substr($htxt, 0, $ptr);	// Text before 1st ph
 
-		$pt2 = strpos($htxt, '}', $ptr) + 1;		// End of ph + 1 psn
-		$result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
-	
-		while ($ptr != 0)
-		{
-			$ptr = strpos($htxt, '{', $pt2);		// Start of next section
-			if (!$ptr)								// No more tags
-			{
-				$result .= substr($htxt, $pt2);
-				break;
-			}
-			$len = $ptr - $pt2;
-			$result .= substr($htxt, $pt2, $len);
-			$pt2 = strpos($htxt, '}', $ptr) + 1;	// End of ph + 1 psn
-			$result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
-		}
-		return $result;
+        $pt2 = strpos($htxt, '}', $ptr) + 1;	// End of ph + 1 psn
+        $result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
+
+        while ($ptr != 0)
+        {
+            $ptr = strpos($htxt, '{', $pt2);	// Start of next section
+            if (!$ptr)								// No more tags
+            {
+                $result .= substr($htxt, $pt2);
+                break;
+            }
+            $len = $ptr - $pt2;
+            $result .= substr($htxt, $pt2, $len);
+            $pt2 = strpos($htxt, '}', $ptr) + 1;	// End of ph + 1 psn
+            $result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
+        }
+        return $result;
 	}
 
 // -----------------------------------------------
