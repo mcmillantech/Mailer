@@ -17,11 +17,10 @@ function showList()
 function showRecord($record)
 function attachments()
 */
-ini_set("display_errors", "1");
-error_reporting(E_ALL);
+//ini_set("display_errors", "1");
+//error_reporting(E_ALL);
 	require_once "view.php";
 	include "LogCheck.php";
-echo "In post ";
 	$source = $_GET['src'];
 	$dta = array();
 
@@ -150,7 +149,6 @@ function saveMessage($attachStr)
 	$subject = $_POST['mcSubject'];
 	$sender = $_POST['mcFrom'];
 	$html = addslashes($_POST['html']);
-//	$html = $_POST['html'];
 	
 	$sql = "UPDATE mailmessages SET htmltext=\"$html\", modified='$dtSQL', "
 		. "name='$name', subject='$subject', sender='$sender', attachment='$attachStr' "
@@ -158,7 +156,6 @@ function saveMessage($attachStr)
 //	echo $sql;
 	mysqli_query($dbConnection, $sql)
 		or die("An error occured saving the message: " . mysqli_error($dbConnection));
-//	echo "Message updated";
 }
 
 // ----------------------------------------------
@@ -206,29 +203,31 @@ function showRecord($record)
 // --------------------------------------------
 function attachments()
 {
-	$attachStr = "";
-//	print_r($_FILES);
-	$num = count($_FILES["mcAttFile"]["name"]);
-	if ($num == 0)				// Not sure if this has an effect
-		return "";
-	
-	$files = $_FILES["mcAttFile"];
-								// Check the 1st error code - only way to see if there's an upload
-	if ($files['error'][0] == UPLOAD_ERR_NO_FILE)
-		return "";
+    $attachStr = "";
+//  print_r($_FILES);
+    $num = count($_FILES["mcAttFile"]["name"]);
+    if ($num == 0)			// Not sure if this has an effect
+            return "";
 
-	for ($i=0; $i<$num; $i++) {
-		$fileName = $files["name"][$i];
-		$tmpName =  $files["tmp_name"][$i];
-		$upload = "Uploads/$fileName";
-		if ($fileName == '')
-			break;
-		$reply = move_uploaded_file($tmpName, $upload);
-		if ($reply == false)
-			die ("MessagePost: Uploading attachment failed");
-		$attachStr .= "$fileName,";
-	}
+    $files = $_FILES["mcAttFile"];
+            // Check the 1st error code - only way to see if there's an upload
+    if ($files['error'][0] == UPLOAD_ERR_NO_FILE) {
+        echo "Nothing uploaded<br>";
+        return "";
+    }
 
-	return $attachStr;
+    for ($i=0; $i<$num; $i++) {
+        $fileName = $files["name"][$i];
+        $tmpName =  $files["tmp_name"][$i];
+        $upload = "Uploads/$fileName";
+        if ($fileName == '')
+                break;
+        $reply = move_uploaded_file($tmpName, $upload);
+        if ($reply == false)
+                die ("MessagePost: Uploading attachment failed");
+        $attachStr .= "$fileName,";
+    }
+echo "String $attachStr ";
+    return $attachStr;
 }
 

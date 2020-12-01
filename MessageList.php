@@ -42,7 +42,7 @@ function showMessageList($type, $dta)
 
 	$sql = "SELECT * FROM mailmessages WHERE template $where ORDER BY id DESC";
 	$result = mysqli_query($dbConnection, $sql)
-		or die ("Error : $sql");
+		or die ("Error showing message list: $sql");
 	
 	$list = array();		// Create a sub array for a list
 	while ($record = mysqli_fetch_array($result)) {
@@ -62,8 +62,8 @@ function showMessageList($type, $dta)
 			$dt = "Modified $dt";
 		$item['modified'] = $dt;
 		array_push($list, $item);
-		$dta["list"] = $list;
 	}
+        $dta["list"] = $list;
 
 	mysqli_free_result($result);
 	return $dta;
