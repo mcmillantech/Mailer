@@ -54,101 +54,94 @@ private function makeHeaders($dbConnection)
 private function writeSentMessage()
 private function lookUpMessageName()
 */
+echo "<br>MTMail 12 \n";
 
-if ($_SERVER['SERVER_NAME'] != 'localhost')
+define ("LOCAL", 0);
+if (LOCAL == 0)
 {
-	require_once "PEAR.php";
-	require_once "Mail.php";
-	require_once "Mail/mime.php";
+    require_once "/usr/share/pear/Mail.php";
+    require "/usr/share/pear/Mail/mail.php";
+    require "/usr/share/pear/Mail/mime.php";
 }
 
 
 class MTMail
 {
-	private	$id;
-	private $list;
-	private	$htmlLines;
-	private	$plainLines;
-	private	$subject;
-	private	$sender;
-	private $messageName;
-	private	$rawHtml;		// This is the html from the app. It includes template content
-	private	$attFile;
-	private	$text;			// Final body text to be sent
-	private	$headers;
-	private	$pearMail;
-	private	$boundary;
-	private	$mergedHtml;
-	private	$mergedPlain;
+    private	$id;
+    private     $list;
+    private	$htmlLines;
+    private	$plainLines;
+    private	$subject;
+    private	$sender;
+    private     $messageName;
+    private	$rawHtml;	// This is the html from the app. It includes template content
+    private	$attFile;
+    private	$text;		// Final body text to be sent
+    private	$headers;
+    private	$pearMail;
+    private	$boundary;
+    private	$mergedHtml;
+    private	$mergedPlain;
 
-	// ----------------------------------------------
-	
-	function __construct($dbConnection)
-	{
-		global	$dbConnection;
+    // ----------------------------------------------
 
-		$list = array();
-		$this->boundary = uniqid('np');		//create a boundary for the email - is this needed?
-		$this->makeHeaders($dbConnection);
-	}
+    function __construct($dbConnection)
+    {
+        global	$dbConnection;
+
+        $list = array();
+        $this->boundary = uniqid('np');		//create a boundary for the email - is this needed?
+        $this->makeHeaders($dbConnection);
+    }
 
 //	----------  Set attributes
-	public function sender($sender)
-	{
-		$this->sender = $sender;
-	}
+    public function sender($sender)
+    {
+        $this->sender = $sender;
+    }
 
-	public function messageName($name)
-	{
-		$this->messageName = $name;
-	}
+    public function messageName($name)
+    {
+        $this->messageName = $name;
+    }
 
-	public function subject($subject)
-	{
-		$this->subject = $subject;
-		$headers['Subject'] = $subject;
-	}
+    public function subject($subject)
+    {
+        $this->subject = $subject;
+        $headers['Subject'] = $subject;
+    }
 
 //	----------  Return attributes
-	public function lst()
-	{
-		return $this->list;
-	}
-	public function text()
-	{
-		return $this->text;
-	}
-	public function headers()
-	{
-		return $this->headers;
-	}
+    public function lst()
+    {
+        return $this->list;
+    }
+    public function text()
+    {
+        return $this->text;
+    }
+    public function headers()
+    {
+        return $this->headers;
+    }
 ///	
-	public function setMessage($id, $html)
-	{
-		global	$dbConnection;
+    public function setMessage($id, $html)
+    {
+        global	$dbConnection;
 
-		$this->id = $id;
-		$this->rawHtml = $html;
-	}
+        $this->id = $id;
+        $this->rawHtml = $html;
+    }
 
 // --------------------------------------------
 //	Set an attachment
 //
 //	Called by MessageSend
 // --------------------------------------------
-	public function attach($attFile)
-	{
-		$this->attFile = $attFile;
-	}
-
-// --------------------------------------------
-//	Called by CronMail.php
-//
-// --------------------------------------------
-/*	public function setPearMail($pearMail)
-	{
-		$this->pearMail = $pearMail;
-	} */
+    public function attach($attFile)
+    {
+        $this->attFile = $attFile;
+    }
 
 // ----------------------------------------------------
 //	Map the sending field names (e.g. email)
@@ -159,52 +152,53 @@ class MTMail
 //
 //	The list (table) holds the names of the columns in 
 //	the data table (e.g. contacts, rcp.. to be merged
-//	Map the merge records to these colimns
+//	Map the merge records to these columns
 // ----------------------------------------------------
-	public function setMap($recipient)
-	{
+    public function setMap($recipient)
+    {
+        $em = $this->list['email'];
+        $fname = $this->list['forename'];
+        $sname = $this->list['surname'];
+        $co  = $this->list['business'];
 
-		$em = $this->list['email'];
-		$fname = $this->list['forename'];
-		$sname = $this->list['surname'];
-		$co  = $this->list['business'];
+        $recipient['email'] = $recipient[$em];
+        if ($co != '') {
+            $recipient['business'] = $recipient[$co];
+        }
+        $recipient['forename'] = $recipient[$fname];
+        $recipient['surname'] = $recipient[$sname];
 
-		$recipient['email'] = $recipient[$em];
-		$recipient['business'] = $recipient[$co];
-		$recipient['forename'] = $recipient[$fname];
-		$recipient['surname'] = $recipient[$sname];
+        return $recipient;
+    }
+    // --------------------------------------------------------
+    //  Fetch the maillist record for the send list
+    //	This holds the map of user's column names to ours
+    //
+    //	Store the maillist record in the class list property
+    // --------------------------------------------------------
+    public function setList($queue)
+    {
+        global	$dbConnection;
 
-		return $recipient;
-	}
-	// --------------------------------------------------------
-	//  Fetch the maillist record for the send list
-	//	This holds the map of user's column names to ours
-	//
-	//	Store the maillist record in the class list property
-	// --------------------------------------------------------
-	public function setList($queue)
-	{
-		global	$dbConnection;
+        $sqlm = "SELECT * FROM maillists WHERE id='" . $queue['listid'] . "'";
+        $resultm = mysqli_query($dbConnection, $sqlm)
+            or die("Mapping error " . mysqli_error($dbConnection) . $sqlm);
+        $this->list = mysqli_fetch_array($resultm);
+        mysqli_free_result($resultm);
+    }
 
-		$sqlm = "SELECT * FROM maillists WHERE id='" . $queue['listid'] . "'";
-		$resultm = mysqli_query($dbConnection, $sqlm)
-			or die("Mapping error " . mysqli_error($dbConnection) . $sqlm);
-		$this->list = mysqli_fetch_array($resultm);
-		mysqli_free_result($resultm);
-	}
+    // ----------------------------------------------
+    //	This is called by the CRON job
+    //
+    //	Set the body and subject
+    // ----------------------------------------------
+    public function setQueueData($html, $subject)
+    {
+            $this->rawHtml = $html;
 
-	// ----------------------------------------------
-	//	This is called by the CRON job
-	//
-	//	Set the body and subject
-	// ----------------------------------------------
-	public function setQueueData($html, $subject)
-	{
-		$this->rawHtml = $html;
-
-		$this->subject = $subject;
-		$this->headers['Subject'] = $subject;
-	}
+            $this->subject = $subject;
+            $this->headers['Subject'] = $subject;
+    }
 
 // --------------------------------------------
 //	Send mail to named recipient by email addr
@@ -214,18 +208,18 @@ class MTMail
 //	Note - merge isn't used here - there
 //	are no merge fields.
 // --------------------------------------------
-	public function sendToOneAddress($email)
-	{
-		echo "Sending message to $email ";
-            $cleanedHtml = $this->stripMTEditHandlers($this->rawHtml);
-            $this->mergedHtml = $this->merge($cleanedHtml, $record);
-            $this->mergedPlain = $this->plainText($this->mergedHtml);
+    public function sendToOneAddress($email)
+    {
+//            echo "Sending message to $email ";
+        $cleanedHtml = $this->stripMTEditHandlers($this->rawHtml);
+        $this->mergedHtml = $this->merge($cleanedHtml, $record);
+        $this->mergedPlain = $this->plainText($this->mergedHtml);
 //		$this->mergedHtml = $this->htmlLines;
 //		$this->mergedPlain = $this->htmlLines;
-		$this->generate();
-		$this->headers['From'] = $this->sender;
-		$this->sendOn($email);
-	}
+            $this->generate();
+            $this->headers['From'] = $this->sender;
+            $this->sendOn($email);
+    }
 
 
 // --------------------------------------------
@@ -235,34 +229,34 @@ class MTMail
 //
 //	called from BasicMail2 and GenerateNews
 // --------------------------------------------
-	public function sendMailToQueue($listId)
-	{
-            global	$dbConnection;
-//echo "<br>Send to queue<br>";
-            $t=time();
-            $dt = date('Y-m-d G:i:s');
+    public function sendMailToQueue($listId)
+    {
+        global	$dbConnection;
 
-            $sql = "INSERT INTO mailqueue "
-                . "(messageid, listid, queuetime, lastrow, subject, sender, html, status, attachment) "
-                . "VALUES ("
-                . "$this->id,"
-                . "'$listId',"
-                . "'$dt',"
-                . "0,"
-                . "'" . addslashes($this->subject) . "',"
-                . "'" . addslashes($this->sender) . "',"
-                . "'" . addslashes($this->rawHtml) . "',"
-                . "'new',"
-                . "'" . $this->attFile . "')";
+        $t=time();
+        $dt = date('Y-m-d G:i:s');
+
+        $sql = "INSERT INTO mailqueue "
+            . "(messageid, listid, queuetime, lastrow, subject, sender, html, status, attachment) "
+            . "VALUES ("
+            . "$this->id,"
+            . "'$listId',"
+            . "'$dt',"
+            . "0,"
+            . "'" . addslashes($this->subject) . "',"
+            . "'" . addslashes($this->sender) . "',"
+            . "'" . addslashes($this->rawHtml) . "',"
+            . "'new',"
+            . "'" . $this->attFile . "')";
 //echo "$sql<br>";
-            mysqli_query($dbConnection, $sql)
-                    or die("Error in MTMail: $sql" . mysqli_error($dbConnection));
+        mysqli_query($dbConnection, $sql)
+            or die("Error in MTMail: $sql" . mysqli_error($dbConnection));
 
-            $this->lookUpMessageName();
-            $this->writeSentMessage();
+        $this->lookUpMessageName();
+        $this->writeSentMessage();
 
-            echo "Thank you. Your email has been scheduled for sending";
-	}
+        echo "Thank you. Your email has been scheduled for sending";
+    }
 
 // -----------------------------------------------
 //	Send one message from the queue
@@ -271,45 +265,51 @@ class MTMail
 //	Parameter   Record for the recipient
 //                  i.e. his email and merge data
 // -----------------------------------------------
-	public function sendQueued($record)
-	{
-            $to = $record['email'];
-            if ($to == '')					// This deals with entries with missing email addresses
-                    return;
+    public function sendQueued($record)
+    {
+        $to = $record['email'];
+        if ($to == '')	// This deals with entries with missing email addresses
+            return;
 
-            $cleanedHtml = $this->stripMTEditHandlers($this->rawHtml);
-            $this->mergedHtml = $this->merge($cleanedHtml, $record);
-            $this->mergedPlain = $this->plainText($this->mergedHtml);
+        $cleanedHtml = $this->stripMTEditHandlers($this->rawHtml);
+        $this->mergedHtml = $this->merge($cleanedHtml, $record);
+        $this->mergedPlain = $this->plainText($this->mergedHtml);
 
-            $this->generate($record);
-            $this->headers['To'] = $to;
-            $this->headers['From'] = $this->sender;
-
-            if ($_SERVER['SERVER_NAME'] != 'localhost')	{	// Release mode
-                $crlf = "\n";
-                $mime = new Mail_mime($crlf);
-                $mime->setHTMLBody($this->mergedHtml);
-                $mime->setTXTBody($this->mergedPlain);
-                if ($this->attFile != '') {
-                        $this->addAttachments($mime);
-                }
-                $body = $mime->get();
-                $headers = $mime->headers($this->headers);
+        $this->generate($record);
+        $this->headers['To'] = $to;
+        $this->headers['From'] = $this->sender;
+//echo "SendQueued<br>\n";
+        if (LOCAL == 0) {
+//                echo "Not local";
+            $crlf = "\n";
+            $mime = new Mail_mime($crlf);
+            $mime->setHTMLBody($this->mergedHtml);
+            $mime->setTXTBody($this->mergedPlain);
+            if ($this->attFile != '') {
+                $this->addAttachments($mime);
+            }
+            $body = $mime->get();
+            $headers = $mime->headers($this->headers);
 //	print_r($headers);
-                $mail =& Mail::factory('sendmail', $this->params);
-                $result = $mail->send($to, $headers, $body);
-                echo "MTMail sendQueued dump<br>";
+//                $mail =& Mail::factory('sendmail', $this->params);
+            $mail = & Mail::factory('mail');
+            $result = $mail->send($to, $headers, $body);
+    if ($result != TRUE) 
+        echo "Mail failed ";
+    
+            echo "MTMail sendQueued success<br>";
+        }
+        else {			// Development mode - running on local PC
+            echo "\n<br>$to<br>";
+    echo "Local<br>\n";
+            if ($this->attFile != '') {
+                $this->addAttachments('', true);
             }
-            else {					// Development mode - running on local PC
-                echo "\n<br>$to<br>";
-                if ($this->attFile != '') {
-                        $this->addAttachments('', true);
-                }
-                echo $this->mergedHtml;
-                echo "Sender " . $this->headers['From'];
-                echo "----------------<br>\n";
-            }
-	}
+            echo $this->mergedHtml;
+            echo "Sender " . $this->headers['From'];
+            echo "----------------<br>\n";
+        }
+    }
 	
 // -----------------------------------------------
 //	Add the attachments to the MIME object
@@ -318,24 +318,28 @@ class MTMail
 //
 //	Parameter	The MIME object
 // -----------------------------------------------
-	private function addAttachments($mime, $test=false)
-	{
-		$attachStr = $this->attFile;
-		if ($attachStr == "")					// No attachments
-			return;
+    private function addAttachments($mime, $test=false)
+    {
+        $attachStr = $this->attFile;
+        if ($attachStr == "")				// No attachments
+                return;
 
-		$attFiles = explode(',', $attachStr);
-		$count = count($attFiles);
-
+        $attFiles = explode(',', $attachStr);
+        $count = count($attFiles) - 1;
+//        echo "count $count ";
+//$test=TRUE;
 //		foreach ($attFiles as $file) {
-		for ($i=0; $i<$count-1; $i++) {
-			$upFile = "Uploads/" . $attFiles[$i];
-			if (!$test) {
-				$rp = $mime->addAttachment($upFile);
-				echo " Att reply $rp, $upFile\n";
-			}
-		}
-	}
+        $path = getcwd() . "/public_html/mail/Uploads/";
+        for ($i=0; $i<$count; $i++) {
+            $upFile = $attFiles[$i];
+            $upFile = $path . $attFiles[$i];
+            if (!$test) {
+                $rp = $mime->addAttachment($upFile);
+//        echo " Att reply $rp, $upFile\n";
+            }
+            else echo " File $upFile\n";
+        }
+    }
 
 // -------------------------------------------------
 // Look up message name
@@ -371,8 +375,8 @@ class MTMail
 		{
 			$mail =& Mail::factory('sendmail', $params);
 			$result = $mail->send($to, $this->headers, $this->text);
-			echo "MTMail sendOn dump<br>";
-			var_dump($result);
+//			echo "MTMail sendOn dump<br>";
+//			var_dump($result);
 		}
 		else echo "Send on $this->text";			// For local debugging
 	}
@@ -404,31 +408,31 @@ class MTMail
 //
 //	Returns the merged HTML
 // --------------------------------------------
-	private function merge($htxt, $recipient)
-	{
-		$ptr = strpos($htxt, '{', 0);				// Start of 1st placeholder
-		if (!$ptr)									// There aren't any - use the raw text
-			return $htxt;
+    private function merge($htxt, $recipient)
+    {
+        $ptr = strpos($htxt, '{', 0);		// Start of 1st placeholder
+        if (!$ptr)									// There aren't any - use the raw text
+            return $htxt;
 
-		$result = substr($htxt, 0, $ptr);			// Text before 1st ph
+        $result = substr($htxt, 0, $ptr);	// Text before 1st ph
 
-		$pt2 = strpos($htxt, '}', $ptr) + 1;		// End of ph + 1 psn
-		$result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
-	
-		while ($ptr != 0)
-		{
-			$ptr = strpos($htxt, '{', $pt2);		// Start of next section
-			if (!$ptr)								// No more tags
-			{
-				$result .= substr($htxt, $pt2);
-				break;
-			}
-			$len = $ptr - $pt2;
-			$result .= substr($htxt, $pt2, $len);
-			$pt2 = strpos($htxt, '}', $ptr) + 1;	// End of ph + 1 psn
-			$result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
-		}
-		return $result;
+        $pt2 = strpos($htxt, '}', $ptr) + 1;	// End of ph + 1 psn
+        $result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
+
+        while ($ptr != 0)
+        {
+            $ptr = strpos($htxt, '{', $pt2);	// Start of next section
+            if (!$ptr)								// No more tags
+            {
+                $result .= substr($htxt, $pt2);
+                break;
+            }
+            $len = $ptr - $pt2;
+            $result .= substr($htxt, $pt2, $len);
+            $pt2 = strpos($htxt, '}', $ptr) + 1;	// End of ph + 1 psn
+            $result .= $this->mergeField($htxt, $ptr, $pt2, $recipient);
+        }
+        return $result;
 	}
 
 // -----------------------------------------------
@@ -565,42 +569,41 @@ class MTMail
 //	Returns
 //		The input, with the handler removed
 // --------------------------------------------------------
-	private function removeHandler($block, $event, $chars)
-	{
-								// Locate handler: from $h0 to $hn	
-		$h0 = strpos($block, $event, 0);
-		if (!$h0)
-			return $block;
-	
-		$hn = strpos($block, '"', $h0+$chars);
-		$len = $hn - $h0 + 1;					// start and length of handler
-		
-		$htm2 = substr_replace($block, '', $h0, $len);	// Remove it
-		return $htm2;
-	
-	}
+    private function removeHandler($block, $event, $chars)
+    {
+                                    // Locate handler: from $h0 to $hn	
+        $h0 = strpos($block, $event, 0);
+        if (!$h0)
+                return $block;
+
+        $hn = strpos($block, '"', $h0+$chars);
+        $len = $hn - $h0 + 1;		// start and length of handler
+
+        $htm2 = substr_replace($block, '', $h0, $len);	// Remove it
+        return $htm2;
+    }
 
 
 // -------------------------------------------------
 // Write to messages table
 // -------------------------------------------------
-	private function writeSentMessage()
-	{
-		global	$dbConnection;
+    private function writeSentMessage()
+    {
+        global	$dbConnection;
 
-		$t=time();
-		$dt = date('Y-m-d G:i:s');
+        $t=time();
+        $dt = date('Y-m-d G:i:s');
 
-		$sql = "INSERT INTO sentmessages "
-			. "(name, sender, subject, lastsend, htmltext) VALUES ("
-			. "'$this->messageName',"
-			. "'$this->sender',"
-			. "'" . addslashes($this->subject) . "',"
-			. "'$dt',"
-			. "'" . addslashes($this->htmlLines) . "')";
-		mysqli_query($dbConnection, $sql)
-			or die("Send list error " . mysqli_error($dbConnection) . " $sql");
-
+        $sql = "INSERT INTO sentmessages "
+            . "(name, sender, subject, lastsend, htmltext) VALUES ("
+            . "'$this->messageName',"
+            . "'$this->sender',"
+            . "'" . addslashes($this->subject) . "',"
+            . "'$dt',"
+            . "'" . addslashes($this->htmlLines) . "')";
+        mysqli_query($dbConnection, $sql)
+            or die("writeSentMessage error " 
+                . mysqli_error($dbConnection) . " $sql");
 	}
 
 } 

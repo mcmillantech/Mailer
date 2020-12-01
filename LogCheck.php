@@ -14,18 +14,18 @@
 // -------------------------------------------------------------
 
 	session_start();
-									// See if a user is logged on
-									// If not, request log on
+                                                // See if a user is logged on
+                                                // If not, request log on
 	if (!array_key_exists('mailuser', $_SESSION)) {
 		header('Location: Logon.php');
 	}
 
-									// Now there should be a session - process timeout
-	$tm = time();					// Fetch current time, compare with last access
+                            // Now there should be a session - process timeout
+	$tm = time();		// Fetch current time, compare with last access
 	$lastTime = 0;
 	if (array_key_exists('lastAccess', $_SESSION))
 		$lastTime = $_SESSION['lastAccess'];
-									// Timeout is hard set to 1 hour (parametrise?)
+                                // Timeout is hard set to 1 hour (parametrise?)
 	if (($tm - $lastTime) > 3600) {
 		session_unset();
 		session_destroy();
@@ -33,14 +33,12 @@
 	}
 
 	$_SESSION['lastAccess'] = $tm;
-									// Yes. As this is a common file, its' a good place to open 
-									// the database connection. Details are in the config file
-									// which is read by AjaxLogon
+                    // Yes. As this is a common file, its' a good place to open 
+                    // the database connection. Details are in the config file
+                    // which is read by AjaxLogon
 	$config = $_SESSION['config'];
-	$dbConnection = mysqli_connect ('localhost', $config['dbuser'], $config['dbpw'])
-		or die("Could not connect : " . mysqli_error($dbConnection));
-	
-	mysqli_select_db($dbConnection, $config['dbname']) 
-		or die("Could not select database : " . mysqli_error($dbConnection));
+    $dbConnection = mysqli_connect 
+        ($config['dbhost'], $config['dbuser'], $config['dbpw'], $config['dbname'])
+        or die("Could not connect : " . $mysqli -> error);
 
 ?>

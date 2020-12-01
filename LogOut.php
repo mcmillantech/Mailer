@@ -16,6 +16,6 @@ session_destroy();
 
 echo "You have been logged out<br><br>";
 
-require_once "LogCheck.php";
+// require_once "LogCheck.php";
 
 ?>

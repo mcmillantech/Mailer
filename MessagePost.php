@@ -17,9 +17,10 @@ function showList()
 function showRecord($record)
 function attachments()
 */
+//ini_set("display_errors", "1");
+//error_reporting(E_ALL);
 	require_once "view.php";
 	include "LogCheck.php";
-
 	$source = $_GET['src'];
 	$dta = array();
 
@@ -62,9 +63,10 @@ function doFromEditor()
 // ----------------------------------------------
 function buttons()
 {
-	$headers = getallheaders();				// Find the type of message from the referrer
-	$caller = $headers['Referer'];
-	$str = strstr($caller, "type=");
+//	$headers = getallheaders();	// Find the type of message from the referrer
+//	$caller = $headers['Referer'];
+	$caller = $_SERVER['HTTP_REFERER'];
+    	$str = strstr($caller, "type=");
 	$type = substr($str, 5, 5);
 
 	if ($type != "email")
@@ -154,7 +156,6 @@ function saveMessage($attachStr)
 //	echo $sql;
 	mysqli_query($dbConnection, $sql)
 		or die("An error occured saving the message: " . mysqli_error($dbConnection));
-//	echo "Message updated";
 }
 
 // ----------------------------------------------
@@ -202,29 +203,31 @@ function showRecord($record)
 // --------------------------------------------
 function attachments()
 {
-	$attachStr = "";
-//	print_r($_FILES);
-	$num = count($_FILES["mcAttFile"]["name"]);
-	if ($num == 0)				// Not sure if this has an effect
-		return "";
-	
-	$files = $_FILES["mcAttFile"];
-								// Check the 1st error code - only way to see if there's an upload
-	if ($files['error'][0] == UPLOAD_ERR_NO_FILE)
-		return "";
+    $attachStr = "";
+//  print_r($_FILES);
+    $num = count($_FILES["mcAttFile"]["name"]);
+    if ($num == 0)			// Not sure if this has an effect
+            return "";
 
-	for ($i=0; $i<$num; $i++) {
-		$fileName = $files["name"][$i];
-		$tmpName =  $files["tmp_name"][$i];
-		$upload = "Uploads/$fileName";
-		if ($fileName == '')
-			break;
-		$reply = move_uploaded_file($tmpName, $upload);
-		if ($reply == false)
-			die ("MessagePost: Uploading attachment failed");
-		$attachStr .= "$fileName,";
-	}
+    $files = $_FILES["mcAttFile"];
+            // Check the 1st error code - only way to see if there's an upload
+    if ($files['error'][0] == UPLOAD_ERR_NO_FILE) {
+        echo "Nothing uploaded<br>";
+        return "";
+    }
 
-	return $attachStr;
+    for ($i=0; $i<$num; $i++) {
+        $fileName = $files["name"][$i];
+        $tmpName =  $files["tmp_name"][$i];
+        $upload = "Uploads/$fileName";
+        if ($fileName == '')
+                break;
+        $reply = move_uploaded_file($tmpName, $upload);
+        if ($reply == false)
+                die ("MessagePost: Uploading attachment failed");
+        $attachStr .= "$fileName,";
+    }
+echo "String $attachStr ";
+    return $attachStr;
 }
 

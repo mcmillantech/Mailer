@@ -16,24 +16,25 @@ function makeListSQL($dta, $row)
 function endOfRun($queue, $stats)
 */
 
-	$dbConnection = openConnection();
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+    $dbConnection = openConnection();
 
-	include "MTMail.php";			// Mailer class
-	$batchSize = 50;
-									// Fetch the oldest incompleted record from the queue table
-	$sql = "SELECT * FROM mailqueue WHERE status != 'complete'";
-	$result = mysqli_query($dbConnection, $sql);
+    include "MTMail.php";			// Mailer class
+    $batchSize = 50;
+                    // Fetch the oldest incompleted record from the queue table
+    $sql = "SELECT * FROM mailqueue WHERE status != 'complete'";
+    $result = mysqli_query($dbConnection, $sql);
 	if (mysqli_num_rows($result) == 0)					// Nothing in the queue
-		exit;
+        exit;
+    $queue = mysqli_fetch_array($result);
+    $mtMail = makeMTMailObject($dbConnection, $queue);
 
-	$queue = mysqli_fetch_array($result);
-	$mtMail = makeMTMailObject($dbConnection, $queue);
+    $stats = sendMails($queue, $mtMail);
+    print_r($stats);
+    endOfRun($queue, $stats);
 
-	$stats = sendMails($queue, $mtMail);
-	print_r($stats);
-	endOfRun($queue, $stats);
-
-	mysqli_free_result($result);
+    mysqli_free_result($result);
 
 // ----------------------------------------
 //	Connect to the database
@@ -42,26 +43,23 @@ function endOfRun($queue, $stats)
 // ----------------------------------------
 function openConnection()
 {
-	$hfile = fopen('config.txt', 'r');
-	if (!$hfile)
-		die ("Could not open config file");
-	$config = array();
+    $hfile = fopen('config.txt', 'r');
+    if (!$hfile)
+            die ("Could not open config file");
+    $config = array();
 
-	while (!feof($hfile))		// config.txt holds DB name, password and user
-	{
-		$str = fgets($hfile);
-		sscanf($str, '%s %s', $ky, $val);
-		$config[$ky] = $val;
-	}
-	fclose ($hfile);
+    while (!feof($hfile))		// config.txt holds DB name, password and user
+    {
+            $str = fgets($hfile);
+            sscanf($str, '%s %s', $ky, $val);
+            $config[$ky] = $val;
+    }
+    fclose ($hfile);
+    $dbConnection = mysqli_connect 
+        ($config['dbhost'], $config['dbuser'], $config['dbpw'], $config['dbname'])
+        or die("Could not connect : " . $mysqli -> error);
 
-	$dbConnection = mysqli_connect ('localhost', $config['dbuser'], $config['dbpw'])
-		or die("Could not connect : " . mysqli_connect_error());
-
-	mysqli_select_db($dbConnection, $config['dbname']) 
-		or die("Could not select database : " . mysqli_error($dbConnection));
-
-	return $dbConnection;
+    return $dbConnection;
 }
 
 // ----------------------------------------
@@ -71,29 +69,29 @@ function openConnection()
 // ----------------------------------------
 function makeMTMailObject($dbConnection, $queue)
 {
-	$msg = $queue['messageid'];
-	$mailer = new MTmail($dbConnection);
+    $msg = $queue['messageid'];
+    $mailer = new MTmail($dbConnection);
 
-	$stats = array (					// Data to be posted at the end of run
-		'nStart' => 0,
-		'nSent' => 0,
-		'emStart' => '',
-		'emEnd' => ''
-	);
+    $stats = array (		// Data to be posted at the end of run
+        'nStart' => 0,
+        'nSent' => 0,
+        'emStart' => '',
+        'emEnd' => ''
+    );
 
-	$html = $queue['html'];				// Distribute the data from the record
-	$sender = $queue['sender'];
-	$subject = $queue['subject'];
-	$attFile = $queue['attachment'];
+    $html = $queue['html'];	// Distribute the data from the record
+    $sender = $queue['sender'];
+    $subject = $queue['subject'];
+    $attFile = $queue['attachment'];
 
-	$mailer->setMessage($msg, $html);
-	$mailer->setList($queue);
-	$mailer->sender($sender);
-	$mailer->attach($attFile);
+    $mailer->setMessage($msg, $html);
+    $mailer->setList($queue);
+    $mailer->sender($sender);
+    $mailer->attach($attFile);
 
-	$mailer->setQueueData($html, $subject);
+    $mailer->setQueueData($html, $subject);
 
-	return $mailer;
+    return $mailer;
 }
 
 // ----------------------------------------------------
@@ -106,39 +104,33 @@ function makeMTMailObject($dbConnection, $queue)
 // ----------------------------------------------------
 function sendMails($queue, $mailer)
 {
-	global $dbConnection, $batchSize;
+    global $dbConnection, $batchSize;
 
-	$count = 0;
-/*
-	if ($_SERVER['SERVER_NAME'] != 'localhost')	{		// i.e. this is the production server
-		$params['sendmail_path'] = '/usr/lib/sendmail';
-		$pearMail =& Mail::factory('sendmail', $params);
-	} */
+    $count = 0;
 
-	$row = $queue['lastrow'];
-	$list = $queue['listid'];
-									// Read the next batch of recipients from the queue
-	$sql = makeListSQL($mailer->lst(), $row);
+    $row = $queue['lastrow'];
+    $list = $queue['listid'];
+                        // Read the next batch of recipients from the queue
+    $sql = makeListSQL($mailer->lst(), $row);
 
-	$resultr = mysqli_query($dbConnection, $sql)
-		or die("Error reading queued list " . $sql);
-	while ($recipient = mysqli_fetch_array($resultr))		// One pass per recipient
-	{
-		$recipient = $mailer->setMap($recipient);
+    $resultr = mysqli_query($dbConnection, $sql)
+            or die("Error reading queued list " . $sql);
+    while ($recipient = mysqli_fetch_array($resultr)) {	// One pass per recipient
+        $recipient = $mailer->setMap($recipient);
 
-		if ($count == 0)								// Set the start stats in the 1st pass
-		{
-			$stats['nStart'] = $queue['lastrow'];
-			$stats['emStart'] = $recipient['email'];
-		}
-		$mailer->sendQueued($recipient);
-		$count++;
-		$stats['emEnd'] = $recipient['email'];
-		$stats['nSent'] = $count;
-	}
-	return $stats;
+        if ($count == 0) {  	// Set the start stats in the 1st pass
+            $stats['nStart'] = $queue['lastrow'];
+            $stats['emStart'] = $recipient['email'];
+        }
 
-	mysqli_free_result($resultr);
+        $mailer->sendQueued($recipient);
+        $count++;
+        $stats['emEnd'] = $recipient['email'];
+        $stats['nSent'] = $count;
+    }
+    return $stats;
+
+    mysqli_free_result($resultr);
 }
 
 // ----------------------------------------------------
